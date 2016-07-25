@@ -537,7 +537,7 @@ _st_thread_t *st_thread_create(void *(*start)(void *arg), void *arg,
   /* Adjust stack size */
   if (stk_size == 0)
     stk_size = ST_DEFAULT_STACK_SIZE;
-  // 计算 stack size，不足一页的会算作一页
+  // 计算 stack size，不足一页的会补足一页
   stk_size = ((stk_size + _ST_PAGE_SIZE - 1) / _ST_PAGE_SIZE) * _ST_PAGE_SIZE;
   // 创建 stack 空间
   stack = _st_stack_new(stk_size);
