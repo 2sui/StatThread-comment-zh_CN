@@ -1,0 +1,106 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXFileReference section */
+		24DF9C5F1D45B6D00044553F /* common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = common.h; path = ../common.h; sourceTree = "<group>"; };
+		24DF9C601D45B6D00044553F /* docs */ = {isa = PBXFileReference; lastKnownFileType = folder; name = docs; path = ../docs; sourceTree = "<group>"; };
+		24DF9C611D45B6D00044553F /* event.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = event.c; path = ../event.c; sourceTree = "<group>"; };
+		24DF9C621D45B6D00044553F /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; name = examples; path = ../examples; sourceTree = "<group>"; };
+		24DF9C631D45B6D00044553F /* extensions */ = {isa = PBXFileReference; lastKnownFileType = folder; name = extensions; path = ../extensions; sourceTree = "<group>"; };
+		24DF9C641D45B6D00044553F /* io.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = io.c; path = ../io.c; sourceTree = "<group>"; };
+		24DF9C651D45B6D00044553F /* key.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = key.c; path = ../key.c; sourceTree = "<group>"; };
+		24DF9C661D45B6D00044553F /* libst.def */ = {isa = PBXFileReference; lastKnownFileType = text; name = libst.def; path = ../libst.def; sourceTree = "<group>"; };
+		24DF9C671D45B6D00044553F /* md.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = md.h; path = ../md.h; sourceTree = "<group>"; };
+		24DF9C681D45B6D00044553F /* md.S */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.asm; name = md.S; path = ../md.S; sourceTree = "<group>"; };
+		24DF9C691D45B6D00044553F /* osguess.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = osguess.sh; path = ../osguess.sh; sourceTree = "<group>"; };
+		24DF9C6A1D45B6D00044553F /* public.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = public.h; path = ../public.h; sourceTree = "<group>"; };
+		24DF9C6B1D45B6D00044553F /* README */ = {isa = PBXFileReference; lastKnownFileType = text; name = README; path = ../README; sourceTree = "<group>"; };
+		24DF9C6C1D45B6D00044553F /* sched.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = sched.c; path = ../sched.c; sourceTree = "<group>"; };
+		24DF9C6D1D45B6D00044553F /* st.pc.in */ = {isa = PBXFileReference; lastKnownFileType = text; name = st.pc.in; path = ../st.pc.in; sourceTree = "<group>"; };
+		24DF9C6E1D45B6D00044553F /* st.spec */ = {isa = PBXFileReference; lastKnownFileType = text; name = st.spec; path = ../st.spec; sourceTree = "<group>"; };
+		24DF9C6F1D45B6DD0044553F /* stk.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = stk.c; path = ../stk.c; sourceTree = "<group>"; };
+		24DF9C701D45B6DD0044553F /* sync.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = sync.c; path = ../sync.c; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		24DF9C581D45B6BD0044553F = {
+			isa = PBXGroup;
+			children = (
+				24DF9C6F1D45B6DD0044553F /* stk.c */,
+				24DF9C701D45B6DD0044553F /* sync.c */,
+				24DF9C5F1D45B6D00044553F /* common.h */,
+				24DF9C601D45B6D00044553F /* docs */,
+				24DF9C611D45B6D00044553F /* event.c */,
+				24DF9C621D45B6D00044553F /* examples */,
+				24DF9C631D45B6D00044553F /* extensions */,
+				24DF9C641D45B6D00044553F /* io.c */,
+				24DF9C651D45B6D00044553F /* key.c */,
+				24DF9C661D45B6D00044553F /* libst.def */,
+				24DF9C671D45B6D00044553F /* md.h */,
+				24DF9C681D45B6D00044553F /* md.S */,
+				24DF9C691D45B6D00044553F /* osguess.sh */,
+				24DF9C6A1D45B6D00044553F /* public.h */,
+				24DF9C6B1D45B6D00044553F /* README */,
+				24DF9C6C1D45B6D00044553F /* sched.c */,
+				24DF9C6D1D45B6D00044553F /* st.pc.in */,
+				24DF9C6E1D45B6D00044553F /* st.spec */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXProject section */
+		24DF9C591D45B6BD0044553F /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0730;
+			};
+			buildConfigurationList = 24DF9C5C1D45B6BD0044553F /* Build configuration list for PBXProject "statthread" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 24DF9C581D45B6BD0044553F;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+			);
+		};
+/* End PBXProject section */
+
+/* Begin XCBuildConfiguration section */
+		24DF9C5D1D45B6BD0044553F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		24DF9C5E1D45B6BD0044553F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		24DF9C5C1D45B6BD0044553F /* Build configuration list for PBXProject "statthread" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				24DF9C5D1D45B6BD0044553F /* Debug */,
+				24DF9C5E1D45B6BD0044553F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 24DF9C591D45B6BD0044553F /* Project object */;
+}
