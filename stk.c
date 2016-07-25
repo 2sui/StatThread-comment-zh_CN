@@ -50,12 +50,14 @@
 /* How much space to leave between the stacks, at each end */
 #define REDZONE	_ST_PAGE_SIZE
 
+// 将 _st_free_stacks 的 prev 和 next 清空
 _st_clist_t _st_free_stacks = ST_INIT_STATIC_CLIST(&_st_free_stacks);
 int _st_num_free_stacks = 0;
 int _st_randomize_stacks = 0;
 
 static char *_st_new_stk_segment(int size);
 
+// 创建 stack
 _st_stack_t *_st_stack_new(int stack_size)
 {
   _st_clist_t *qp;
