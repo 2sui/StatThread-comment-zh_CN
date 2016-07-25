@@ -141,7 +141,7 @@ int st_init(void)
   }
 
   /* We can ignore return value here */
-  // 选取事件源系统 (如果以选取则忽略)
+  // 选取事件源系统 (如果已选取则忽略，默认为 select 或 poll)
   st_set_eventsys(ST_EVENTSYS_DEFAULT);
 
   // 屏蔽 SIGPIPE 信号，根据事件源系统需要修改进程最大描述符数量限制
@@ -158,10 +158,11 @@ int st_init(void)
   ST_INIT_CLIST(&_ST_THREADQ); 
 #endif
 
-  // 调用对应的事件源系统的 init 方法，如 epoll 事件源会调用 _st_epoll_init() 方法
+  // 调用对应的事件源系统的 init 方法（如 epoll 事件源会调用 _st_epoll_init() 方法，在里面获取 epoll 描述符并申请对应 epoll_event 和 _epoll_fd_data_t 数组的空间
   if ((*_st_eventsys->init)() < 0)
     return -1;
 
+  // 设置当前虚拟 process 的页大小和时钟
   _st_this_vp.pagesize = getpagesize();
   _st_this_vp.last_clock = st_utime();
 
@@ -521,6 +522,7 @@ void st_thread_interrupt(_st_thread_t *thread)
 }
 
 
+// 创建空闲进程
 _st_thread_t *st_thread_create(void *(*start)(void *arg), void *arg,
 			       int joinable, int stk_size)
 {
@@ -535,7 +537,9 @@ _st_thread_t *st_thread_create(void *(*start)(void *arg), void *arg,
   /* Adjust stack size */
   if (stk_size == 0)
     stk_size = ST_DEFAULT_STACK_SIZE;
+  // 计算 stack size，不足一页的会算作一页
   stk_size = ((stk_size + _ST_PAGE_SIZE - 1) / _ST_PAGE_SIZE) * _ST_PAGE_SIZE;
+  // 创建 stack
   stack = _st_stack_new(stk_size);
   if (!stack)
     return NULL;

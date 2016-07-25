@@ -128,8 +128,8 @@ static struct _st_epolldata {
     int evtlist_size;
     int evtlist_cnt;
     int fd_hint;
-    int epfd;
-    pid_t pid;
+    int epfd; // epoll 描述符
+    pid_t pid; // 所在进程 id
 } *_st_epoll_data;
 
 #ifndef ST_EPOLL_EVTLIST_SIZE
@@ -1045,24 +1045,30 @@ ST_HIDDEN int _st_epoll_init(void)
     int err = 0;
     int rv = 0;
 
+    // 申请 _st_epolldata 控件
     _st_epoll_data =
         (struct _st_epolldata *) calloc(1, sizeof(*_st_epoll_data));
     if (!_st_epoll_data)
         return -1;
 
+    // 设置当前事件系统描述符限制(最大为 ST_EPOLL_EVTLIST_SIZE (4096) )
+    // Linux 2.6.8 内核以后该参数没有实际意义: epoll_create() creates an epoll(7) instance.  Since Linux 2.6.8, the size argument is ignored, but must be greater than zero.
     fdlim = st_getfdlimit();
     _st_epoll_data->fd_hint = (fdlim > 0 && fdlim < ST_EPOLL_EVTLIST_SIZE) ?
         fdlim : ST_EPOLL_EVTLIST_SIZE;
 
+    // 创建 epoll 描述符
     if ((_st_epoll_data->epfd = epoll_create(_st_epoll_data->fd_hint)) < 0) {
         err = errno;
         rv = -1;
         goto cleanup_epoll;
     }
+    // 设置 FD_CLOEXEC 标致位，获取当前进程 id
     fcntl(_st_epoll_data->epfd, F_SETFD, FD_CLOEXEC);
     _st_epoll_data->pid = getpid();
 
     /* Allocate file descriptor data array */
+    // 申请文件描述符 bucket 内存
     _st_epoll_data->fd_data_size = _st_epoll_data->fd_hint;
     _st_epoll_data->fd_data =
         (_epoll_fd_data_t *)calloc(_st_epoll_data->fd_data_size,
@@ -1074,6 +1080,7 @@ ST_HIDDEN int _st_epoll_init(void)
     }
 
     /* Allocate event lists */
+    // 申请 epoll_event 结构内存
     _st_epoll_data->evtlist_size = _st_epoll_data->fd_hint;
     _st_epoll_data->evtlist =
         (struct epoll_event *)malloc(_st_epoll_data->evtlist_size *
