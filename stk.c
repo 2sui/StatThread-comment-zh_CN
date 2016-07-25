@@ -92,6 +92,12 @@ _st_stack_t *_st_stack_new(int stack_size)
     free(ts);
     return NULL;
   }
+    
+  /*
+      REDZONE        stack_size      extra    REDZONE
+   |__________|____________________|_______|____________|
+ vaddr    stk_bottom            stk_top
+   */
   // 标记栈大小和栈顶栈底指针
   ts->stk_size = stack_size; // 不含 REDZONE 和 extra 的部分
   ts->stk_bottom = ts->vaddr + REDZONE;
@@ -102,6 +108,7 @@ _st_stack_t *_st_stack_new(int stack_size)
   mprotect(ts->stk_top + extra, REDZONE, PROT_NONE);
 #endif
 
+     // 如果 extra 不为 0，则可用栈空间整体随机偏移 16字节的整数倍（小于 extra 的范围）
   if (extra) {
     long offset = (random() % extra) & ~0xf;
 

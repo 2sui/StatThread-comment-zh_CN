@@ -555,9 +555,11 @@ _st_thread_t *st_thread_create(void *(*start)(void *arg), void *arg,
    * grows downward. Both stacks start in the middle and grow outward
    * from each other.
    */
+  // 将栈指针指向栈空间中间，分别向两端移动（普通栈空间和寄存器栈空间）
   sp -= (stk_size >> 1);
   bsp = sp;
   /* Make register stack 64-byte aligned */
+  // bsp 地址进行 64 byte 对其（向高地址偏移）
   if ((unsigned long)bsp & 0x3f)
     bsp = bsp + (0x40 - ((unsigned long)bsp & 0x3f));
   stack->bsp = bsp + _ST_STACK_PAD_SIZE;
