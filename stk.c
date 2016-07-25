@@ -64,10 +64,13 @@ _st_stack_t *_st_stack_new(int stack_size)
   _st_stack_t *ts;
   int extra;
 
+  // 以此从 _st_free_stacks 取出 _st_stack_t
   for (qp = _st_free_stacks.next; qp != &_st_free_stacks; qp = qp->next) {
     ts = _ST_THREAD_STACK_PTR(qp);
+    // 找到满足 stack_size 的 _st_stack_t
     if (ts->stk_size >= stack_size) {
       /* Found a stack that is big enough */
+      // 把找到的 _st_stack_t 从 _st_free_stacks 里移除
       ST_REMOVE_LINK(&ts->links);
       _st_num_free_stacks--;
       ts->links.next = NULL;
@@ -76,17 +79,21 @@ _st_stack_t *_st_stack_new(int stack_size)
     }
   }
 
+  // 如果没有找打满足大小的 _st_stack_t
   /* Make a new thread stack object. */
   if ((ts = (_st_stack_t *)calloc(1, sizeof(_st_stack_t))) == NULL)
     return NULL;
+  // 如果 _st_randomize_stacks 为 0 则 extra 为 _ST_PAGE_SIZE, 否则为 0
   extra = _st_randomize_stacks ? _ST_PAGE_SIZE : 0;
   ts->vaddr_size = stack_size + 2*REDZONE + extra;
+  // 申请 stack 空间
   ts->vaddr = _st_new_stk_segment(ts->vaddr_size);
   if (!ts->vaddr) {
     free(ts);
     return NULL;
   }
-  ts->stk_size = stack_size;
+  // 标记栈大小和栈顶栈底指针
+  ts->stk_size = stack_size; // 不含 REDZONE 和 extra 的部分
   ts->stk_bottom = ts->vaddr + REDZONE;
   ts->stk_top = ts->stk_bottom + stack_size;
 
@@ -120,8 +127,10 @@ void _st_stack_free(_st_stack_t *ts)
 }
 
 
+// 申请线程栈空间
 static char *_st_new_stk_segment(int size)
 {
+  // 如果有 malloc 则使用 malloc，否则通过内存映射申请内存
 #ifdef MALLOC_STACK
   void *vaddr = malloc(size);
 #else
