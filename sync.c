@@ -150,7 +150,7 @@ int st_sleep(int secs)
 /*****************************************
  * Condition variable functions
  */
-
+// 创建条件变量（清空等待队列）
 _st_cond_t *st_cond_new(void)
 {
   _st_cond_t *cvar;

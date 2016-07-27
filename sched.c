@@ -597,6 +597,7 @@ _st_thread_t *st_thread_create(void *(*start)(void *arg), void *arg,
   thread->start = start;
   thread->arg = arg;
 
+  // 初始化 thread 空间（设置jmp点 setjmp）
 #ifndef __ia64__
   _ST_INIT_CONTEXT(thread, stack->sp, _st_thread_main);
 #else
@@ -613,6 +614,7 @@ _st_thread_t *st_thread_create(void *(*start)(void *arg), void *arg,
   }
 
   /* Make thread runnable */
+  // 标记当前线程为可运行状态，活动计数+1，将该线程添加到运行队列进行调度
   thread->state = _ST_ST_RUNNABLE;
   _st_active_count++;
   _ST_ADD_RUNQ(thread);
