@@ -125,7 +125,7 @@ static struct _st_epolldata {
     _epoll_fd_data_t *fd_data;
     struct epoll_event *evtlist;
     int fd_data_size;  // 最大事件容量
-    int evtlist_size;  // 最大生成事件容量
+    int evtlist_size;  // 最大就绪事件容量
     int evtlist_cnt;
     int fd_hint;
     int epfd; // epoll 描述符
@@ -1129,6 +1129,7 @@ ST_HIDDEN int _st_epoll_fd_data_expand(int maxfd)
     return 0;
 }
 
+// 扩容最大就绪事件容量
 ST_HIDDEN void _st_epoll_evtlist_expand(void)
 {
     struct epoll_event *ptr;
@@ -1185,6 +1186,7 @@ ST_HIDDEN void _st_epoll_pollset_del(struct pollfd *pds, int npds)
     }
 }
 
+// 将句柄数组添加至事件源系统
 ST_HIDDEN int _st_epoll_pollset_add(struct pollfd *pds, int npds)
 {
     struct epoll_event ev;
@@ -1371,6 +1373,7 @@ ST_HIDDEN int _st_epoll_fd_new(int osfd)
 
 ST_HIDDEN int _st_epoll_fd_close(int osfd)
 {
+    // 如果还有事件没有处理，则返回 EBUSY
     if (_ST_EPOLL_READ_CNT(osfd) || _ST_EPOLL_WRITE_CNT(osfd) ||
         _ST_EPOLL_EXCEP_CNT(osfd)) {
         errno = EBUSY;

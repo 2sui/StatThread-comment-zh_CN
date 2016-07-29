@@ -199,6 +199,7 @@ typedef struct _st_mutex {
 } _st_mutex_t;
 
 
+// 轮训队列，在事件源系统中使用
 typedef struct _st_pollq {
   _st_clist_t links;          /* For putting on io queue */
   _st_thread_t  *thread;      /* Polling thread */
@@ -246,7 +247,7 @@ typedef struct _st_vp {
 #endif
 } _st_vp_t;
 
-
+// socket 句柄封装
 typedef struct _st_netfd {
   int osfd;                   /* Underlying OS file descriptor */
   int inuse;                  /* In-use flag */
@@ -410,6 +411,7 @@ void _st_iterate_threads(void);
  * Switch away from the current thread context by saving its state and
  * calling the thread scheduler
  */
+// 切换上下文, 先设置 jmp 点，然后调用 _st_vp_schedule() 进行线程调度,该函数会调用 _ST_RESTORE_CONTEXT 宏
 #define _ST_SWITCH_CONTEXT(_thread)       \
     ST_BEGIN_MACRO                        \
     ST_SWITCH_OUT_CB(_thread);            \
@@ -424,6 +426,7 @@ void _st_iterate_threads(void);
  * Restore a thread context that was saved by _ST_SWITCH_CONTEXT or
  * initialized by _ST_INIT_CONTEXT
  */
+//
 #define _ST_RESTORE_CONTEXT(_thread)   \
     ST_BEGIN_MACRO                     \
     _ST_SET_CURRENT_THREAD(_thread);   \

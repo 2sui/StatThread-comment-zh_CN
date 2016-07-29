@@ -76,11 +76,14 @@ int st_poll(struct pollfd *pds, int npds, st_utime_t timeout)
   if ((*_st_eventsys->pollset_add)(pds, npds) < 0)
     return -1;
 
+    // 将 pq 绑定到当前线程并加入 io 队列，用于调度
   pq.pds = pds;
   pq.npds = npds;
   pq.thread = me;
   pq.on_ioq = 1;
   _ST_ADD_IOQ(pq);
+  
+    // 如果超时没有事件片，则当前线程进入 io wait 状态，并进行线程切换
   if (timeout != ST_UTIME_NO_TIMEOUT)
     _ST_ADD_SLEEPQ(me, timeout);
   me->state = _ST_ST_IO_WAIT;
@@ -110,10 +113,15 @@ int st_poll(struct pollfd *pds, int npds, st_utime_t timeout)
 }
 
 
+// 线程调度函数
+//
 void _st_vp_schedule(void)
 {
   _st_thread_t *thread;
 
+  // 如果运行队列不为空，则从运行队列中取出线程，然后将该线程从运行队列中删除
+  // 如果没有待运行线程则使用 idle_thead
+    
   if (_ST_RUNQ.next != &_ST_RUNQ) {
     /* Pull thread off of the run queue */
     thread = _ST_THREAD_PTR(_ST_RUNQ.next);
@@ -124,6 +132,7 @@ void _st_vp_schedule(void)
   }
   ST_ASSERT(thread->state == _ST_ST_RUNNABLE);
 
+    // 将取出的线程状态设为 running，然后恢复该线程的上下文继续运行
   /* Resume the thread */
   thread->state = _ST_ST_RUNNING;
   _ST_RESTORE_CONTEXT(thread);
@@ -322,7 +331,7 @@ int st_thread_join(_st_thread_t *thread, void **retvalp)
   return 0;
 }
 
-
+// thead 的初始化调用函数（主函数），在该函数内 会调用 _st_thread_t 指定的函数和参数，并将返回值保存进来
 void _st_thread_main(void)
 {
   _st_thread_t *thread = _ST_CURRENT_THREAD();
@@ -528,7 +537,7 @@ void st_thread_interrupt(_st_thread_t *thread)
 }
 
 
-// 创建空闲进程
+// 创建线程
 _st_thread_t *st_thread_create(void *(*start)(void *arg), void *arg,
 			       int joinable, int stk_size)
 {
@@ -603,12 +612,14 @@ _st_thread_t *st_thread_create(void *(*start)(void *arg), void *arg,
   thread->start = start;
   thread->arg = arg;
 
+    // 初始化线程上下文，设置 jmp 点，然后执行线程指定的函数，直到函数退出
 #ifndef __ia64__
   _ST_INIT_CONTEXT(thread, stack->sp, _st_thread_main);
 #else
   _ST_INIT_CONTEXT(thread, stack->sp, stack->bsp, _st_thread_main);
 #endif
 
+    // 到这里线程函数执行完，等待 join
   /* If thread is joinable, allocate a termination condition variable */
   if (joinable) {
     thread->term = st_cond_new();
