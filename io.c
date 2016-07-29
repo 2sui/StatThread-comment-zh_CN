@@ -192,7 +192,7 @@ int st_netfd_close(_st_netfd_t *fd)
   return close(fd->osfd);
 }
 
-
+// 获取 _st_netfd_t 对应的文件描述符
 int st_netfd_fileno(_st_netfd_t *fd)
 {
   return (fd->osfd);
@@ -449,6 +449,7 @@ int st_connect(_st_netfd_t *fd, const struct sockaddr *addr, int addrlen,
 }
 
 
+// 从 _st_netfd_t 中读取数据
 ssize_t st_read(_st_netfd_t *fd, void *buf, size_t nbyte, st_utime_t timeout)
 {
   ssize_t n;
