@@ -56,6 +56,7 @@ static st_utime_t (*_st_utime)(void) = NULL;
  * Time functions
  */
 
+// 设置 执行 _st_utime 句柄，如果没有指定该句柄 则使用 MD_GET_UTIME 宏
 st_utime_t st_utime(void)
 {
   if (_st_utime == NULL) {
@@ -88,13 +89,14 @@ st_utime_t st_utime_last_clock(void)
   return _ST_LAST_CLOCK;
 }
 
-
+// 获取当前时间并存入缓存
 int st_timecache_set(int on)
 {
   int wason = (_st_curr_time) ? 1 : 0;
 
   if (on) {
     _st_curr_time = time(NULL);
+    // 执行 _st_utime 句柄
     _st_last_tset = st_utime();
   } else
     _st_curr_time = 0;

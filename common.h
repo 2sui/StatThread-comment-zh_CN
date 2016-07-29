@@ -199,6 +199,7 @@ typedef struct _st_mutex {
 } _st_mutex_t;
 
 
+// 轮训队列，在事件源系统中使用
 typedef struct _st_pollq {
   _st_clist_t links;          /* For putting on io queue */
   _st_thread_t  *thread;      /* Polling thread */
@@ -246,7 +247,7 @@ typedef struct _st_vp {
 #endif
 } _st_vp_t;
 
-
+// socket 句柄封装
 typedef struct _st_netfd {
   int osfd;                   /* Underlying OS file descriptor */
   int inuse;                  /* In-use flag */
@@ -310,7 +311,7 @@ extern _st_eventsys_t *_st_eventsys;
 /*****************************************
  * Thread states and flags
  */
-
+// 线程状态
 #define _ST_ST_RUNNING      0 
 #define _ST_ST_RUNNABLE     1
 #define _ST_ST_IO_WAIT      2
@@ -320,6 +321,7 @@ extern _st_eventsys_t *_st_eventsys;
 #define _ST_ST_ZOMBIE       6
 #define _ST_ST_SUSPENDED    7
 
+// 线程 flag
 #define _ST_FL_PRIMORDIAL   0x01
 #define _ST_FL_IDLE_THREAD  0x02
 #define _ST_FL_ON_SLEEPQ    0x04
@@ -409,6 +411,7 @@ void _st_iterate_threads(void);
  * Switch away from the current thread context by saving its state and
  * calling the thread scheduler
  */
+// 切换上下文, 先设置 jmp 点，然后调用 _st_vp_schedule() 进行线程调度,该函数会调用 _ST_RESTORE_CONTEXT 宏
 #define _ST_SWITCH_CONTEXT(_thread)       \
     ST_BEGIN_MACRO                        \
     ST_SWITCH_OUT_CB(_thread);            \
@@ -423,6 +426,7 @@ void _st_iterate_threads(void);
  * Restore a thread context that was saved by _ST_SWITCH_CONTEXT or
  * initialized by _ST_INIT_CONTEXT
  */
+//
 #define _ST_RESTORE_CONTEXT(_thread)   \
     ST_BEGIN_MACRO                     \
     _ST_SET_CURRENT_THREAD(_thread);   \
