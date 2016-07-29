@@ -130,15 +130,17 @@ void st_netfd_free(_st_netfd_t *fd)
   _st_netfd_freelist = fd;
 }
 
-
+// 将 osfd 转换为 _st_netfd_t 并返回
 static _st_netfd_t *_st_netfd_new(int osfd, int nonblock, int is_socket)
 {
   _st_netfd_t *fd;
   int flags = 1;
 
+ // 先判断下要不要扩容
   if ((*_st_eventsys->fd_new)(osfd) < 0)
     return NULL;
 
+    // 从空闲 netfd 队列中取出一个 netfd，如果空闲队列为空则创建一个 netfd。
   if (_st_netfd_freelist) {
     fd = _st_netfd_freelist;
     _st_netfd_freelist = _st_netfd_freelist->next;
@@ -152,6 +154,7 @@ static _st_netfd_t *_st_netfd_new(int osfd, int nonblock, int is_socket)
   fd->inuse = 1;
   fd->next = NULL;
 
+    // 设置非阻塞
   if (nonblock) {
     /* Use just one system call */
     if (is_socket && ioctl(osfd, FIONBIO, &flags) != -1)
@@ -173,7 +176,7 @@ _st_netfd_t *st_netfd_open(int osfd)
   return _st_netfd_new(osfd, 1, 0);
 }
 
-
+// 将 socket 文件描述符转为 _st_netfd_t
 _st_netfd_t *st_netfd_open_socket(int osfd)
 {
   return _st_netfd_new(osfd, 1, 1);
@@ -263,11 +266,13 @@ _st_netfd_t *st_accept(_st_netfd_t *fd, struct sockaddr *addr, int *addrlen,
   int osfd, err;
   _st_netfd_t *newfd;
 
+  // 接受新连接
   while ((osfd = accept(fd->osfd, addr, (socklen_t *)addrlen)) < 0) {
     if (errno == EINTR)
       continue;
     if (!_IO_NOT_READY_ERROR)
       return NULL;
+      
     /* Wait until the socket becomes readable */
     if (st_netfd_poll(fd, POLLIN, timeout) < 0)
       return NULL;
@@ -299,6 +304,7 @@ _st_netfd_t *st_accept(_st_netfd_t *fd, struct sockaddr *addr, int *addrlen,
  * The following code serializes accept()'s without process blocking.
  * A pipe is used as an inter-process semaphore.
  */
+// 部分系统没有实现 accept 序列化，这里通过管道的方式，在多进程环境下通过竞争读取管道数据实现 accept 序列化
 int st_netfd_serialize_accept(_st_netfd_t *fd)
 {
   _st_netfd_t **p;
@@ -338,6 +344,7 @@ static void _st_netfd_free_aux_data(_st_netfd_t *fd)
 {
   _st_netfd_t **p = (_st_netfd_t **) fd->aux_data;
 
+    // 关闭用于同步 accept 的管道
   st_netfd_close(p[0]);
   st_netfd_close(p[1]);
   free(p);
@@ -349,7 +356,7 @@ _st_netfd_t *st_accept(_st_netfd_t *fd, struct sockaddr *addr, int *addrlen,
 {
   int osfd, err;
   _st_netfd_t *newfd;
-  _st_netfd_t **p = (_st_netfd_t **) fd->aux_data;
+  _st_netfd_t **p = (_st_netfd_t **) fd->aux_data; // 获取用于同步的管道
   ssize_t n;
   char c;
 
@@ -357,6 +364,7 @@ _st_netfd_t *st_accept(_st_netfd_t *fd, struct sockaddr *addr, int *addrlen,
     if (p == NULL) {
       osfd = accept(fd->osfd, addr, (socklen_t *)addrlen);
     } else {
+      // 从管道读取数据，没有数据则会一直阻塞
       /* Get the lock */
       n = st_read(p[0], &c, 1, timeout);
       if (n < 0)
@@ -366,6 +374,7 @@ _st_netfd_t *st_accept(_st_netfd_t *fd, struct sockaddr *addr, int *addrlen,
       osfd = accept(fd->osfd, addr, (socklen_t *)addrlen);
       /* Unlock */
       err = errno;
+      // 接受完新连接后向管道写入一字节，通知其他进程进行 accept 调用
       n = st_write(p[1], &c, 1, timeout);
       ST_ASSERT(n == 1);
       errno = err;

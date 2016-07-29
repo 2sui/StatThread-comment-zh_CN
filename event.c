@@ -124,8 +124,8 @@ typedef struct _epoll_fd_data {
 static struct _st_epolldata {
     _epoll_fd_data_t *fd_data;
     struct epoll_event *evtlist;
-    int fd_data_size;
-    int evtlist_size;
+    int fd_data_size;  // 最大事件容量
+    int evtlist_size;  // 最大生成事件容量
     int evtlist_cnt;
     int fd_hint;
     int epfd; // epoll 描述符
@@ -1104,11 +1104,13 @@ ST_HIDDEN int _st_epoll_init(void)
     return rv;
 }
 
+// 扩容最大事件容量
 ST_HIDDEN int _st_epoll_fd_data_expand(int maxfd)
 {
     _epoll_fd_data_t *ptr;
     int n = _st_epoll_data->fd_data_size;
 
+    // 将新容量扩大为现有容量的两倍
     while (maxfd >= n)
         n <<= 1;
 
@@ -1117,6 +1119,7 @@ ST_HIDDEN int _st_epoll_fd_data_expand(int maxfd)
     if (!ptr)
         return -1;
 
+    // 清空新增的部分
     memset(ptr + _st_epoll_data->fd_data_size, 0,
            (n - _st_epoll_data->fd_data_size) * sizeof(_epoll_fd_data_t));
 
@@ -1355,8 +1358,10 @@ ST_HIDDEN void _st_epoll_dispatch(void)
     }
 }
 
+// 这里只是判断下需不需要扩容？
 ST_HIDDEN int _st_epoll_fd_new(int osfd)
 {
+    // 这里简单通过文件描述符的值判断当前打开的描述符数量（由于新打开的文件描述符值是依次递增的）
     if (osfd >= _st_epoll_data->fd_data_size &&
         _st_epoll_fd_data_expand(osfd) < 0)
         return -1;

@@ -59,6 +59,7 @@ st_utime_t _st_last_tset;       /* Last time it was fetched */
 
 int st_poll(struct pollfd *pds, int npds, st_utime_t timeout)
 {
+  // pollfd 起始和结束地址
   struct pollfd *pd;
   struct pollfd *epd = pds + npds;
   _st_pollq_t pq;
@@ -71,6 +72,7 @@ int st_poll(struct pollfd *pds, int npds, st_utime_t timeout)
     return -1;
   }
 
+   // 调用对应事件系统的添加事件句柄
   if ((*_st_eventsys->pollset_add)(pds, npds) < 0)
     return -1;
 
