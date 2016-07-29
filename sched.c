@@ -131,6 +131,7 @@ void _st_vp_schedule(void)
 /*
  * Initialize this Virtual Processor
  */
+// 主要进行初始化了事件源系统，屏蔽信号，修改系统描述符限制，创建空闲线程和当前原始线程
 int st_init(void)
 {
   _st_thread_t *thread;
@@ -173,13 +174,16 @@ int st_init(void)
 					     NULL, 0, 0);
   if (!_st_this_vp.idle_thread)
     return -1;
+  // 设置 id_thread->flags 为 _ST_FL_IDLE_THREAD
   _st_this_vp.idle_thread->flags = _ST_FL_IDLE_THREAD;
+  // idle_thread 不计入活动线程
   _st_active_count--;
   _ST_DEL_RUNQ(_st_this_vp.idle_thread);
 
   /*
    * Initialize primordial thread
    */
+   // 原始线程
   thread = (_st_thread_t *) calloc(1, sizeof(_st_thread_t) +
 				   (ST_KEYS_MAX * sizeof(void *)));
   if (!thread)
@@ -614,7 +618,9 @@ _st_thread_t *st_thread_create(void *(*start)(void *arg), void *arg,
 
   /* Make thread runnable */
   thread->state = _ST_ST_RUNNABLE;
+  // 活动线程计数
   _st_active_count++;
+    // 将 thread 加入调度队列
   _ST_ADD_RUNQ(thread);
 #ifdef DEBUG
   _ST_ADD_THREADQ(thread);

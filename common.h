@@ -310,7 +310,7 @@ extern _st_eventsys_t *_st_eventsys;
 /*****************************************
  * Thread states and flags
  */
-
+// 线程状态
 #define _ST_ST_RUNNING      0 
 #define _ST_ST_RUNNABLE     1
 #define _ST_ST_IO_WAIT      2
@@ -320,6 +320,7 @@ extern _st_eventsys_t *_st_eventsys;
 #define _ST_ST_ZOMBIE       6
 #define _ST_ST_SUSPENDED    7
 
+// 线程 flag
 #define _ST_FL_PRIMORDIAL   0x01
 #define _ST_FL_IDLE_THREAD  0x02
 #define _ST_FL_ON_SLEEPQ    0x04
