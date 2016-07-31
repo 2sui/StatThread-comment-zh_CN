@@ -426,7 +426,7 @@ void _st_iterate_threads(void);
  * Restore a thread context that was saved by _ST_SWITCH_CONTEXT or
  * initialized by _ST_INIT_CONTEXT
  */
-//
+// 跳转到线程上下文继续运行
 #define _ST_RESTORE_CONTEXT(_thread)   \
     ST_BEGIN_MACRO                     \
     _ST_SET_CURRENT_THREAD(_thread);   \

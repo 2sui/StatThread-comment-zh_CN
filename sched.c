@@ -57,6 +57,7 @@ time_t _st_curr_time = 0;       /* Current time as returned by time(2) */
 st_utime_t _st_last_tset;       /* Last time it was fetched */
 
 
+// 将 pds 队列中的描述符加入事件源系统并进行线程调度，如果超时则从时间系统中移除
 int st_poll(struct pollfd *pds, int npds, st_utime_t timeout)
 {
   // pollfd 起始和结束地址
@@ -83,11 +84,12 @@ int st_poll(struct pollfd *pds, int npds, st_utime_t timeout)
   pq.on_ioq = 1;
   _ST_ADD_IOQ(pq);
   
-    // 如果超时没有事件片，则当前线程进入 io wait 状态，并进行线程切换
+    // 如果设置超时，则加入睡眠队列，等待 io 事件进行唤醒
   if (timeout != ST_UTIME_NO_TIMEOUT)
     _ST_ADD_SLEEPQ(me, timeout);
   me->state = _ST_ST_IO_WAIT;
 
+    // 线程调度
   _ST_SWITCH_CONTEXT(me);
 
   n = 0;
@@ -233,15 +235,18 @@ st_switch_cb_t st_set_switch_out_cb(st_switch_cb_t cb)
  * Start function for the idle thread
  */
 /* ARGSUSED */
+// 空闲调度线程，触发事件源系统的事件分发，
 void *_st_idle_thread_start(void *arg)
 {
   _st_thread_t *me = _ST_CURRENT_THREAD();
 
   while (_st_active_count > 0) {
     /* Idle vp till I/O is ready or the smallest timeout expired */
+      // 触发事件源系统的事件分发
     _ST_VP_IDLE();
 
     /* Check sleep queue for expired threads */
+      // 从睡眠队列中取出结束睡眠的线程，加入运行队列
     _st_vp_check_clock();
 
     me->state = _ST_ST_RUNNABLE;
@@ -484,25 +489,30 @@ void _st_del_sleep_q(_st_thread_t *thread)
 }
 
 
+// 处理
 void _st_vp_check_clock(void)
 {
   _st_thread_t *thread;
   st_utime_t elapsed, now;
  
+    // 获取当前微秒（芯片的计数器数）
   now = st_utime();
-  elapsed = now - _ST_LAST_CLOCK;
+  elapsed = now - _ST_LAST_CLOCK; // 获取两次虚拟 process 的计时间隔
   _ST_LAST_CLOCK = now;
 
+    // 如果两次时间设置间隔 > 1 秒 ，则通过 time 函数重新设置当前时间
   if (_st_curr_time && now - _st_last_tset > 999000) {
-    _st_curr_time = time(NULL);
-    _st_last_tset = now;
+    _st_curr_time = time(NULL); // _st_curr_time 当前时间的秒数
+    _st_last_tset = now; // now - _st_last_tset 当前时间的微秒数
   }
 
   while (_ST_SLEEPQ != NULL) {
     thread = _ST_SLEEPQ;
     ST_ASSERT(thread->flags & _ST_FL_ON_SLEEPQ);
+      // 如果唤醒时间大于当前时间，说明还不需要唤醒 （第一节点不用唤醒，后面的也不用）
     if (thread->due > now)
       break;
+      // 否则从睡眠队列移除
     _ST_DEL_SLEEPQ(thread);
 
     /* If thread is waiting on condition variable, set the time out flag */
@@ -512,6 +522,7 @@ void _st_vp_check_clock(void)
     /* Make thread runnable */
     ST_ASSERT(!(thread->flags & _ST_FL_IDLE_THREAD));
     thread->state = _ST_ST_RUNNABLE;
+      // 将结束睡眠的加入运行队列
     _ST_ADD_RUNQ(thread);
   }
 }

@@ -853,6 +853,7 @@ ST_HIDDEN void _st_kq_pollset_del(struct pollfd *pds, int npds)
     }
 }
 
+// kqueue 事件分发
 ST_HIDDEN void _st_kq_dispatch(void)
 {
     struct timespec timeout, *tsp;
@@ -867,6 +868,7 @@ ST_HIDDEN void _st_kq_dispatch(void)
     if (_ST_SLEEPQ == NULL) {
         tsp = NULL;
     } else {
+        // 获取最早睡眠的线程还要睡多久
         min_timeout = (_ST_SLEEPQ->due <= _ST_LAST_CLOCK) ? 0 :
             (_ST_SLEEPQ->due - _ST_LAST_CLOCK);
         timeout.tv_sec  = (time_t) (min_timeout / 1000000);
@@ -1196,11 +1198,13 @@ ST_HIDDEN int _st_epoll_pollset_add(struct pollfd *pds, int npds)
     /* Do as many checks as possible up front */
     for (i = 0; i < npds; i++) {
         fd = pds[i].fd;
+        // 校验触发事件
         if (fd < 0 || !pds[i].events ||
             (pds[i].events & ~(POLLIN | POLLOUT | POLLPRI))) {
             errno = EINVAL;
             return -1;
         }
+        // 如果 fd data 不够用，则扩展（加倍）
         if (fd >= _st_epoll_data->fd_data_size &&
             _st_epoll_fd_data_expand(fd) < 0)
             return -1;
@@ -1210,6 +1214,7 @@ ST_HIDDEN int _st_epoll_pollset_add(struct pollfd *pds, int npds)
         fd = pds[i].fd;
         old_events = _ST_EPOLL_EVENTS(fd);
 
+        // 记录各个事件各自的数量
         if (pds[i].events & POLLIN)
             _ST_EPOLL_READ_CNT(fd)++;
         if (pds[i].events & POLLOUT)
@@ -1226,6 +1231,7 @@ ST_HIDDEN int _st_epoll_pollset_add(struct pollfd *pds, int npds)
                 (op != EPOLL_CTL_ADD || errno != EEXIST))
                 break;
             if (op == EPOLL_CTL_ADD) {
+                // 如果是添加事件，判断需不需要扩展就绪事件槽
                 _st_epoll_data->evtlist_cnt++;
                 if (_st_epoll_data->evtlist_cnt > _st_epoll_data->evtlist_size)
                     _st_epoll_evtlist_expand();
@@ -1245,6 +1251,7 @@ ST_HIDDEN int _st_epoll_pollset_add(struct pollfd *pds, int npds)
     return 0;
 }
 
+// epoll 事件分发
 ST_HIDDEN void _st_epoll_dispatch(void)
 {
     st_utime_t min_timeout;
@@ -1259,11 +1266,13 @@ ST_HIDDEN void _st_epoll_dispatch(void)
     if (_ST_SLEEPQ == NULL) {
         timeout = -1;
     } else {
+        // 获取最早睡眠的线程还要睡多久
         min_timeout = (_ST_SLEEPQ->due <= _ST_LAST_CLOCK) ? 0 :
             (_ST_SLEEPQ->due - _ST_LAST_CLOCK);
         timeout = (int) (min_timeout / 1000);
     }
 
+    // fork 出的子进程，则重新获取 epoll fd
     if (_st_epoll_data->pid != getpid()) {
         /* We probably forked, reinitialize epoll set */
         close(_st_epoll_data->epfd);
@@ -1272,6 +1281,7 @@ ST_HIDDEN void _st_epoll_dispatch(void)
             /* There is nothing we can do here, will retry later */
             return;
         }
+        // exec 调用时关闭
         fcntl(_st_epoll_data->epfd, F_SETFD, FD_CLOEXEC);
         _st_epoll_data->pid = getpid();
 
@@ -1279,6 +1289,7 @@ ST_HIDDEN void _st_epoll_dispatch(void)
         memset(_st_epoll_data->fd_data, 0,
                _st_epoll_data->fd_data_size * sizeof(_epoll_fd_data_t));
         _st_epoll_data->evtlist_cnt = 0;
+        // 将 io 队列的 net fd 都加入事件系统
         for (q = _ST_IOQ.next; q != &_ST_IOQ; q = q->next) {
             pq = _ST_POLLQUEUE_PTR(q);
             _st_epoll_pollset_add(pq->pds, pq->npds);
@@ -1299,6 +1310,7 @@ ST_HIDDEN void _st_epoll_dispatch(void)
             }
         }
 
+        // ####
         for (q = _ST_IOQ.next; q != &_ST_IOQ; q = q->next) {
             pq = _ST_POLLQUEUE_PTR(q);
             notify = 0;

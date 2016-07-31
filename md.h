@@ -73,7 +73,7 @@
 #define MD_SETJMP(env) _setjmp(env) // 设置 jmp 点
 #define MD_LONGJMP(env, val) _longjmp(env, val)
 
-// 初始化线程上下文，设置 jmp 点， 并设置跳转后执行的 _main 函数
+// 初始化线程上下文，设置 jmp 点， 并设置第一次调度跳转的 _main 函数
 #define MD_INIT_CONTEXT(_thread, _sp, _main) \
   ST_BEGIN_MACRO                             \
   if (MD_SETJMP((_thread)->context))         \
@@ -81,6 +81,7 @@
   (_thread)->context[3] = (long) (_sp);      \
   ST_END_MACRO
 
+// 获取当前微秒
 #define MD_GET_UTIME()                        \
   timebasestruct_t rt;                        \
   (void) read_real_time(&rt, TIMEBASE_SZ);    \

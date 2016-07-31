@@ -56,7 +56,7 @@ static st_utime_t (*_st_utime)(void) = NULL;
  * Time functions
  */
 
-// 设置 执行 _st_utime 句柄，如果没有指定该句柄 则使用 MD_GET_UTIME 宏
+// 设置 执行 _st_utime 句柄获取当前微秒数，如果没有指定该句柄 则使用 MD_GET_UTIME 宏
 st_utime_t st_utime(void)
 {
   if (_st_utime == NULL) {
