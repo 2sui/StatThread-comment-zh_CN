@@ -1148,6 +1148,7 @@ ST_HIDDEN void _st_epoll_evtlist_expand(void)
     }
 }
 
+// 从事件源移除 pollfd
 ST_HIDDEN void _st_epoll_pollset_del(struct pollfd *pds, int npds)
 {
     struct epoll_event ev;
@@ -1176,6 +1177,7 @@ ST_HIDDEN void _st_epoll_pollset_del(struct pollfd *pds, int npds)
          * this function inside dispatch(). Outside of dispatch()
          * _ST_EPOLL_REVENTS is always zero for all descriptors.
          */
+        // 如果 pollfd 上的事件都被处理完了，则将其从事件源移除
         if (events != old_events && _ST_EPOLL_REVENTS(pd->fd) == 0) {
             op = events ? EPOLL_CTL_MOD : EPOLL_CTL_DEL;
             ev.events = events;
@@ -1311,13 +1313,13 @@ ST_HIDDEN void _st_epoll_dispatch(void)
         }
 
         // ####
-        // 依次从 io 队列取出每组等待 io 的 pollfd
+        // 依次从 io 队列取出每个线程等待 io 的 pollfd，pq 是一个线程中加入的所有文件描述符
         for (q = _ST_IOQ.next; q != &_ST_IOQ; q = q->next) {
             pq = _ST_POLLQUEUE_PTR(q);
             notify = 0;
             epds = pq->pds + pq->npds;
 
-            // 遍历每组 pollfd ,获取对应的事件，然后从 io 队列中移除；如果 pollfd 上
+            // 遍历每个线程 pollfd ,获取对应的事件，然后从 io 队列中移除；如果 pollfd 上
             // 有事件发生，则将其从 io 队列移除，没有事件的继续在 io 队列等待
             for (pds = pq->pds; pds < epds; pds++) {
                 if (_ST_EPOLL_REVENTS(pds->fd) == 0) {
@@ -1352,9 +1354,10 @@ ST_HIDDEN void _st_epoll_dispatch(void)
                  * Here we will only delete/modify descriptors that
                  * didn't fire (see comments in _st_epoll_pollset_del()).
                  */
+                // 将当前线程已处理完事件的文件描述符从事件系统中移除
                 _st_epoll_pollset_del(pq->pds, pq->npds);
 
-                // 如果当前线程处于睡眠则移除
+                // 如果当前线程处于睡眠则从睡眠队列移除，然后将当前线程加入运行队列
                 if (pq->thread->flags & _ST_FL_ON_SLEEPQ)
                     _ST_DEL_SLEEPQ(pq->thread);
                 pq->thread->state = _ST_ST_RUNNABLE;
@@ -1362,6 +1365,7 @@ ST_HIDDEN void _st_epoll_dispatch(void)
             }
         }
 
+        // 修改剩下还有等待事件的描述符
         for (i = 0; i < nfd; i++) {
             /* Delete/modify descriptors that fired */
             osfd = _st_epoll_data->evtlist[i].data.fd;
