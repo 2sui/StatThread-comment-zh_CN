@@ -199,7 +199,7 @@ typedef struct _st_mutex {
 } _st_mutex_t;
 
 
-// 轮训队列，在事件源系统中使用
+// 轮训队列，在事件源系统中使用,用于加入 io 队列
 typedef struct _st_pollq {
   _st_clist_t links;          /* For putting on io queue */
   _st_thread_t  *thread;      /* Polling thread */

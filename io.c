@@ -170,7 +170,7 @@ static _st_netfd_t *_st_netfd_new(int osfd, int nonblock, int is_socket)
   return fd;
 }
 
-
+// 将普通文件描述符转为 _st_netfd_t
 _st_netfd_t *st_netfd_open(int osfd)
 {
   return _st_netfd_new(osfd, 1, 0);

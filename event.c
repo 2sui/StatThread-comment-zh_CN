@@ -1266,7 +1266,7 @@ ST_HIDDEN void _st_epoll_dispatch(void)
     if (_ST_SLEEPQ == NULL) {
         timeout = -1;
     } else {
-        // 获取最早睡眠的线程还要睡多久
+        // 获取最早睡眠的线程还要睡多久（用于epoll超时）
         min_timeout = (_ST_SLEEPQ->due <= _ST_LAST_CLOCK) ? 0 :
             (_ST_SLEEPQ->due - _ST_LAST_CLOCK);
         timeout = (int) (min_timeout / 1000);
@@ -1311,11 +1311,14 @@ ST_HIDDEN void _st_epoll_dispatch(void)
         }
 
         // ####
+        // 依次从 io 队列取出每组等待 io 的 pollfd
         for (q = _ST_IOQ.next; q != &_ST_IOQ; q = q->next) {
             pq = _ST_POLLQUEUE_PTR(q);
             notify = 0;
             epds = pq->pds + pq->npds;
 
+            // 遍历每组 pollfd ,获取对应的事件，然后从 io 队列中移除；如果 pollfd 上
+            // 有事件发生，则将其从 io 队列移除，没有事件的继续在 io 队列等待
             for (pds = pq->pds; pds < epds; pds++) {
                 if (_ST_EPOLL_REVENTS(pds->fd) == 0) {
                     pds->revents = 0;
@@ -1336,11 +1339,13 @@ ST_HIDDEN void _st_epoll_dispatch(void)
                     revents |= POLLHUP;
 
                 pds->revents = revents;
+                // 判断是不是有事件发生
                 if (revents) {
                     notify = 1;
                 }
             }
             if (notify) {
+                // 将有时间发生的描述符从 io 队列移除
                 ST_REMOVE_LINK(&pq->links);
                 pq->on_ioq = 0;
                 /*
@@ -1349,6 +1354,7 @@ ST_HIDDEN void _st_epoll_dispatch(void)
                  */
                 _st_epoll_pollset_del(pq->pds, pq->npds);
 
+                // 如果当前线程处于睡眠则移除
                 if (pq->thread->flags & _ST_FL_ON_SLEEPQ)
                     _ST_DEL_SLEEPQ(pq->thread);
                 pq->thread->state = _ST_ST_RUNNABLE;
