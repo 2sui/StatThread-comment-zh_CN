@@ -623,11 +623,7 @@ _st_thread_t *st_thread_create(void *(*start)(void *arg), void *arg,
   thread->start = start;
   thread->arg = arg;
 
-<<<<<<< HEAD
-  // 初始化 thread 空间（设置jmp点 setjmp）
-=======
-    // 初始化线程上下文，设置 jmp 点和跳转以后的执行函数 _st_thread_main, 在该函数中会调用 thread 中要执行的函数
->>>>>>> 1f51417a6322356843bcd0fb813515df546bf999
+// 初始化线程上下文，设置 jmp 点和跳转以后的执行函数 _st_thread_main, 在该函数中会调用 thread 中要执行的函数
 #ifndef __ia64__
   _ST_INIT_CONTEXT(thread, stack->sp, _st_thread_main);
 #else

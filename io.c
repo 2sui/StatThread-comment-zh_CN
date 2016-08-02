@@ -379,6 +379,7 @@ _st_netfd_t *st_accept(_st_netfd_t *fd, struct sockaddr *addr, int *addrlen,
       ST_ASSERT(n == 1);
       errno = err;
     }
+    // 如果接收到新连接则退出循环进行下一步处理，否则调用 st_netfd_poll 进行线程调度
     if (osfd >= 0)
       break;
     if (errno == EINTR)
